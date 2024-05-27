@@ -1,9 +1,7 @@
-import { Toaster } from 'react-hot-toast';
-import { useState } from 'react'
+import { Toaster, toast } from 'react-hot-toast';
+import { useState, useEffect } from 'react'
 import './App.css'
 import SearchBar from './components/SearchBar/SearchBar'
-import { useEffect } from 'react'
-
 import { getImages } from "./apiRequest"
 import ImageGallery from './components/ImageGallery/ImageGallery'
 import ImageModal from './components/ImageModal/ImageModal'
@@ -19,7 +17,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState(false)
   const [page, setPage] = useState(1)
-
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [showBtn, setShowBtn] = useState(false);
+  const [totalPage, setTotalPage] = useState(1)
 
 
   useEffect(() => {
@@ -28,13 +29,20 @@ function App() {
     async function fetchImages() {
       try {
         setIsLoading(true)
+        setErrorMessage(false)
 
-        const fetchImages = await getImages(query, page)
+        const { results, total_pages } = await getImages(query, page)
 
-        setImages((prevImages) => [...prevImages, ...fetchImages])
+        if (results.length === 0) {
+          toast.error('No images found. Please try another search.');
+        }
 
+        setImages((prevImages) => [...prevImages, ...results])
+        setTotalPage(total_pages)
+        setShowBtn(page < total_pages)
       } catch (error) {
         setErrorMessage(true)
+        toast.error('Error fetching images. Please try again.')
       }
       finally {
         setIsLoading(false)
@@ -47,22 +55,36 @@ function App() {
 
   function handleSubmit(query) {
     setImages([])
+    setPage(1)
     setQuery(query)
+
   }
 
+
   const handleLoadMore = () => {
-    setPage(page + 1)
-  }
+    setPage((prevPage) => prevPage + 1);
+  };
+
+  const openModal = (image) => {
+    setSelectedImage(image);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedImage(null);
+    setModalIsOpen(false);
+  };
+
 
   return (
     <>
       <SearchBar onSubmit={handleSubmit} />
       {isLoading && <Loader />}
-      <ImageGallery images={images} />
+      <ImageGallery images={images} selectedImage={selectedImage} modalIsOpen={modalIsOpen} openModal={openModal} closeModal={closeModal} />
       <Toaster />
       <ImageModal />
       {errorMessage && <LoadMessage />}
-      {images.length > 0 && <LoadMoreBtn onLoadMore={handleLoadMore} />}
+      {images.length > 0 && showBtn && < LoadMoreBtn onLoadMore={handleLoadMore} />}
     </>
   )
 }

@@ -1,21 +1,10 @@
-import { useState } from 'react';
+
 import ImageCard from '../ImageCard/ImageCard';
 import ImageModal from '../ImageModal/ImageModal';
 import css from './ImageGallery.module.css';
 
-const ImageGallery = ({ images }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
+const ImageGallery = ({ images, selectedImage, modalIsOpen, openModal, closeModal }) => {
 
-  const openModal = (image) => {
-    setSelectedImage(image);
-    setModalIsOpen(true);
-  };
-
-  const closeModal = () => {
-    setSelectedImage(null);
-    setModalIsOpen(false);
-  };
 
   return (
     <div>
